@@ -143,6 +143,54 @@
   #n64pad .n64b{width:28%;height:28%;left:0;top:34%;background:#2a9d45;box-shadow:0 4px 0 #17602a}
   #n64pad .bt span{transform:none}
   .ombros .ombro.so64{width:22%}
+
+  /* ---- controle clássico gerado por console ---- */
+  .c-ombros{display:flex;justify-content:space-between;gap:8px}
+  .c-ombros .ombro{flex:1;max-width:30%}
+  .c-ombros.vazio{visibility:hidden}
+  .c-meio{display:flex;justify-content:space-between;align-items:center;flex:1;min-height:0;padding:0 2px;gap:6px}
+  .dpad{--t:min(38vw,22vh,165px);position:relative;width:var(--t);height:var(--t);touch-action:none;flex:none}
+  .dpad.mini{--t:62px}
+  .dpad .h,.dpad .v{position:absolute;background:#2f2d33;border-radius:6px;box-shadow:0 4px 0 #1b1a1e}
+  .dpad .h{left:0;right:0;top:33.3%;height:33.4%} .dpad .v{top:0;bottom:0;left:33.3%;width:33.4%}
+  .dpad .centro{position:absolute;left:41%;top:41%;width:18%;height:18%;border-radius:50%;background:#26252a}
+  .dpad .seta{position:absolute;width:0;height:0;border:7px solid transparent;opacity:.45}
+  .dpad.mini .seta{border-width:4px}
+  .dpad .s4{left:50%;top:7%;transform:translateX(-50%);border-bottom-color:#999}
+  .dpad .s5{left:50%;bottom:7%;transform:translateX(-50%);border-top-color:#999}
+  .dpad .s6{top:50%;left:7%;transform:translateY(-50%);border-right-color:#999}
+  .dpad .s7{top:50%;right:7%;transform:translateY(-50%);border-left-color:#999}
+  .dpad[data-dir~="4"] .s4,.dpad[data-dir~="5"] .s5,.dpad[data-dir~="6"] .s6,.dpad[data-dir~="7"] .s7{opacity:1}
+  .joy{--t:min(36vw,21vh,155px);position:relative;width:var(--t);height:var(--t);border-radius:50%;flex:none;touch-action:none;
+    background:radial-gradient(circle,#3a383f 0 55%,#2f2d33 56%);box-shadow:0 4px 0 #1b1a1e,inset 0 0 0 3px #26252a}
+  .joy.mini{--t:78px}
+  .joy i{position:absolute;left:50%;top:50%;width:44%;height:44%;margin:-22% 0 0 -22%;border-radius:50%;
+    background:radial-gradient(circle at 40% 35%,#6a6870,#3b3940);box-shadow:0 3px 6px rgba(0,0,0,.4);pointer-events:none}
+  .joy small{position:absolute;left:0;right:0;bottom:-16px;text-align:center;font-size:9px;font-weight:800;color:var(--marca);letter-spacing:1px}
+  .face{--t:min(44vw,25vh,185px);position:relative;width:var(--t);height:var(--t);flex:none}
+  .face .bt{width:36%;height:36%}
+  .face .bt span{transform:none}
+  .f1 .bt{width:48%;height:48%;left:26%;top:26%}
+  .f2 .bt{width:40%;height:40%}
+  .f2 .bt:nth-child(1){left:4%;top:48%} .f2 .bt:nth-child(2){left:54%;top:14%}
+  .f3 .bt{width:31%;height:31%}
+  .f3 .bt:nth-child(1){left:0;top:52%} .f3 .bt:nth-child(2){left:34%;top:36%} .f3 .bt:nth-child(3){left:68%;top:20%}
+  .f4 .bt:nth-child(1){left:32%;top:0;background:var(--botao-claro)} .f4 .bt:nth-child(2){left:0;top:32%;background:var(--botao-claro)}
+  .f4 .bt:nth-child(3){left:64%;top:32%} .f4 .bt:nth-child(4){left:32%;top:64%}
+  .f6 .bt{width:29%;height:29%;font-size:13px}
+  .f6 .bt:nth-child(-n+3){background:var(--botao-claro)}
+  .f6 .bt:nth-child(1){left:2%;top:22%} .f6 .bt:nth-child(2){left:35%;top:12%} .f6 .bt:nth-child(3){left:68%;top:2%}
+  .f6 .bt:nth-child(4){left:2%;top:58%} .f6 .bt:nth-child(5){left:35%;top:48%} .f6 .bt:nth-child(6){left:68%;top:38%}
+  .fn64 .c{position:absolute;width:22%;height:22%;border-radius:50%;background:#e8b923;color:#6b5208;font-size:11px;box-shadow:0 3px 0 #9c7a10;touch-action:none}
+  .fn64 .c.on{transform:translateY(2px);box-shadow:0 1px 0 #9c7a10}
+  .fn64 .cu{left:62%;top:0}.fn64 .cd{left:62%;top:40%}.fn64 .cl{left:44%;top:20%}.fn64 .cr{left:78%;top:20%}
+  .fn64 .bt.n0{width:28%;height:28%;left:0;top:34%;background:#2a9d45;box-shadow:0 4px 0 #17602a}
+  .fn64 .bt.n1{width:34%;height:34%;left:22%;top:62%;background:#2856c6;box-shadow:0 4px 0 #173378}
+  .c-analog{display:flex;justify-content:space-around;padding:0 10px 22px}
+  .c-sistema{display:flex;justify-content:center;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-top:2px}
+  .c-sistema .ss{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--marca);font-size:9px;font-weight:800;letter-spacing:.5px;white-space:nowrap}
+  .c-sistema .ss button{width:54px;height:15px;border-radius:8px;background:#77737a;transform:rotate(-24deg);box-shadow:0 2px 0 #4f4c52;touch-action:none}
+  .c-sistema .ss button.on{background:#5f5c63;box-shadow:none}
   .sel-start{display:flex;justify-content:center;gap:26px;margin-top:2px}
   .sel-start .ss{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--marca);font-size:10px;font-weight:800;letter-spacing:1px}
   .sel-start .ss button{width:62px;height:16px;border-radius:8px;background:#77737a;transform:rotate(-24deg);box-shadow:0 2px 0 #4f4c52;touch-action:none}
@@ -251,45 +299,8 @@
   </div>
   <div id="marca">PixelBoy<small id="nome-jogo"></small></div>
 
-  <!-- Clássico -->
-  <div id="controles">
-    <div class="ombros">
-      <button class="ombro" data-btn="10">L</button>
-      <button class="ombro so64" data-btn="12">Z</button>
-      <button class="ombro" data-btn="11">R</button>
-    </div>
-    <div class="meio">
-      <div id="dpad" data-dir="">
-        <div class="h"></div><div class="v"></div><div class="centro"></div>
-        <i class="seta s4"></i><i class="seta s5"></i><i class="seta s6"></i><i class="seta s7"></i>
-      </div>
-      <div id="abxy">
-        <button class="bt x" data-btn="9"><span>X</span></button>
-        <button class="bt y" data-btn="1"><span>Y</span></button>
-        <button class="bt a" data-btn="8"><span>A</span></button>
-        <button class="bt b" data-btn="0"><span>B</span></button>
-      </div>
-      <div id="n64pad">
-        <button class="c cu" data-btn="23" data-analog="1">▲</button>
-        <button class="c cl" data-btn="21" data-analog="1">◀</button>
-        <button class="c cr" data-btn="20" data-analog="1">▶</button>
-        <button class="c cd" data-btn="22" data-analog="1">▼</button>
-        <button class="bt n64a" data-btn="0"><span>A</span></button>
-        <button class="bt n64b" data-btn="1"><span>B</span></button>
-      </div>
-    </div>
-    <div>
-      <div class="sel-start">
-        <div class="ss sel"><button data-btn="2" aria-label="Select"></button>SELECT</div>
-        <div class="ss"><button data-btn="3" aria-label="Start"></button>START</div>
-      </div>
-      <div class="menu-row">
-        <button class="pilula" data-acao="salvar">💾 Salvar</button>
-        <button class="pilula" data-acao="carregar">📂 Carregar</button>
-        <button class="pilula" data-acao="menu">☰ Menu</button>
-      </div>
-    </div>
-  </div>
+  <!-- Clássico: montado para cada console a partir de consoles.js -->
+  <div id="controles"></div>
 
   <!-- Modo celular -->
   <div id="gestos">

@@ -6,7 +6,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 
 const ext = n => (n.split('.').pop() || '').toLowerCase();
 const consolePorExt = n => Object.keys(CONSOLES).find(c => CONSOLES[c].ext.includes(ext(n))) || null;
-const info = c => CONSOLES[c] || { nome: c, sigla: c.toUpperCase(), cor: '#555', layout: '4', gestos: CONSOLES.snes.gestos };
+const info = c => CONSOLES[c] || { ...CONSOLES.snes, nome: c, sigla: c.toUpperCase(), cor: '#555' };
 const slug = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const semExt = n => n.replace(/\.[^.]+$/, '');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -435,7 +435,8 @@ function legenda(c) {
   if (g.segurar) l += `<div><b>Segure</b>${esc(g.segurar[1])}</div>`;
   for (const [d, v] of Object.entries(g.deslizes || {})) l += `<div><b>Deslize ${SETAS[d]}</b>${esc(v[1])}</div>`;
   if (g.camera) l += `<div><b>Arraste à direita</b>Câmera / botões C (arraste devagar e mantenha)</div>`;
-  if (g.extras && g.extras.length) l += `<div><b>Botões</b>${g.extras.map(x => x[0]).join(' · ')} (na barra de cima)</div>`;
+  const ex = CONSOLES[c] ? extrasGestos(c) : [];
+  if (ex.length) l += `<div><b>Botões</b>${ex.map(x => esc(x[0])).join(' · ')} (na barra de cima)</div>`;
   l += `<div><b>Dica</b>Use dois dedos à direita para combinar ações (ex.: segurar para correr e tocar para pular).</div>`;
   return l;
 }
@@ -469,7 +470,8 @@ function jogar(jogo, peloToque) {
   const i = info(jogo.console);
   document.body.classList.add('jogando');
   document.body.dataset.console = jogo.console;
-  document.body.dataset.layout = i.layout;
+  document.body.dataset.layout = i.botoes.mov;
+  montarClassico(jogo.console);
   document.body.classList.toggle('sem-tela', i.gestos.tela === false);
   $('#rotulo-console').textContent = i.nome.toUpperCase();
   $('#nome-jogo').textContent = limparNome(jogo.nome);
@@ -593,16 +595,15 @@ function ligarBotao(b) {
   const solta = () => { if (!b.classList.contains('on')) return; b.classList.remove('on'); up(i); };
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => b.addEventListener(ev, solta));
 }
-$$('#controles [data-btn]').forEach(ligarBotao);
 document.addEventListener('contextmenu', e => { if (e.target.closest('#shell')) e.preventDefault(); });
 
-/* ---- direcional clássico ---- */
-const DIR_N64 = { 4: 19, 5: 18, 6: 17, 7: 16 };   // no N64 o direcional desenhado vira o analógico
+/* ---- direcional e analógicos ---- */
+const DIR_ANALOG = { 4: 19, 5: 18, 6: 17, 7: 16 };   // direção → analógico esquerdo
 function setDirsDe(estado, novas, modo) {
   for (const d of [4, 5, 6, 7]) {
     if (novas.has(d) === estado.has(d)) continue;
     const on = novas.has(d);
-    if (modo === 'analog' || modo === 'ambos') on ? down(DIR_N64[d], ANALOG) : up(DIR_N64[d]);
+    if (modo === 'analog' || modo === 'ambos') on ? down(DIR_ANALOG[d], ANALOG) : up(DIR_ANALOG[d]);
     if (modo !== 'analog') on ? down(d) : up(d);
   }
   if (novas.size && !estado.size) vib();
@@ -617,23 +618,77 @@ function dirsDoVetor(x, y, zonaMorta) {
   if (a < -22.5 && a > -157.5) s.add(4);
   return s;
 }
-(() => {
-  const dpad = $('#dpad');
+function ligarDpad(el) {
   let dirs = new Set();
-  const modo = () => document.body.dataset.layout === 'n64' ? 'analog' : 'dpad';
-  const set = n => { setDirsDe(dirs, n, modo()); dirs = n; dpad.dataset.dir = [...n].join(' '); };
-  const ponto = e => { const r = dpad.getBoundingClientRect(); return dirsDoVetor(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2, r.width * 0.1); };
-  dpad.addEventListener('pointerdown', e => { e.preventDefault(); try { dpad.setPointerCapture(e.pointerId); } catch (_) {} set(ponto(e)); });
-  dpad.addEventListener('pointermove', e => { if (dpad.hasPointerCapture && dpad.hasPointerCapture(e.pointerId)) set(ponto(e)); });
-  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => dpad.addEventListener(ev, () => set(new Set())));
-})();
+  const set = n => { setDirsDe(dirs, n, 'dpad'); dirs = n; el.dataset.dir = [...n].join(' '); };
+  const ponto = e => { const r = el.getBoundingClientRect(); return dirsDoVetor(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2, r.width * 0.1); };
+  el.addEventListener('pointerdown', e => { e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (_) {} set(ponto(e)); });
+  el.addEventListener('pointermove', e => { if (el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) set(ponto(e)); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => el.addEventListener(ev, () => set(new Set())));
+}
+/* analógico fixo do modo clássico: base = 16 (esquerdo) ou 20 (direito) */
+function enviarAnalogico(base, x, y) {
+  const v = [[base, Math.max(0, x)], [base + 1, Math.max(0, -x)], [base + 2, Math.max(0, y)], [base + 3, Math.max(0, -y)]];
+  for (const [i, a] of v) press(i, Math.round(a * ANALOG));
+}
+function ligarJoy(el) {
+  const base = +el.dataset.base, bola = el.querySelector('i');
+  let id = null;
+  const mover = e => {
+    const r = el.getBoundingClientRect(), raio = r.width / 2;
+    let x = (e.clientX - r.left - raio) / (raio * 0.75), y = (e.clientY - r.top - raio) / (raio * 0.75);
+    const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
+    const zm = 0.12, mm = Math.hypot(x, y);
+    bola.style.transform = `translate(${x * raio * 0.5}px,${y * raio * 0.5}px)`;
+    if (mm < zm) enviarAnalogico(base, 0, 0); else { const k = (mm - zm) / (1 - zm) / mm; enviarAnalogico(base, x * k, y * k); }
+  };
+  el.addEventListener('pointerdown', e => { if (id !== null) return; e.preventDefault(); id = e.pointerId; try { el.setPointerCapture(id); } catch (_) {} vib(); mover(e); });
+  el.addEventListener('pointermove', e => { if (e.pointerId === id) mover(e); });
+  const fim = e => { if (e.pointerId !== id) return; id = null; bola.style.transform = ''; enviarAnalogico(base, 0, 0); };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => el.addEventListener(ev, fim));
+}
+
+const DPAD_HTML = cls => `<div class="dpad ${cls || ''}" data-dir=""><div class="h"></div><div class="v"></div><div class="centro"></div>
+  <i class="seta s4"></i><i class="seta s5"></i><i class="seta s6"></i><i class="seta s7"></i></div>`;
+const botaoFace = ([r, i], k) => `<button class="bt n${k}" data-btn="${i}"><span>${esc(r)}</span></button>`;
+
+/* Monta o controle clássico com TODOS os botões do console (ver consoles.js) */
+function montarClassico(c) {
+  const b = info(c).botoes, extras = b.extras || [];
+  const ombros = `<div class="c-ombros ${b.ombros.length ? '' : 'vazio'}">${(b.ombros.length ? b.ombros : [['L', 10], ['R', 11]])
+    .map(([r, i]) => `<button class="ombro" data-btn="${i}">${esc(r)}</button>`).join('')}</div>`;
+  const esquerda = b.mov === 'analog'
+    ? `<div class="joy" data-base="16"><i></i></div>`
+    : DPAD_HTML();
+  let direita;
+  if (extras.includes('cbotoes')) {
+    direita = `<div class="face fn64">
+      <button class="c cu" data-btn="23" data-analog="1">▲</button><button class="c cl" data-btn="21" data-analog="1">◀</button>
+      <button class="c cr" data-btn="20" data-analog="1">▶</button><button class="c cd" data-btn="22" data-analog="1">▼</button>
+      ${b.face.map(botaoFace).join('')}</div>`;
+  } else {
+    direita = `<div class="face f${b.face.length}">${b.face.map(botaoFace).join('')}</div>`;
+  }
+  const analogicos = extras.includes('analogicos')
+    ? `<div class="c-analog"><div class="joy mini" data-base="16"><i></i><small>ANALÓG. ESQ.</small></div><div class="joy mini" data-base="20"><i></i><small>ANALÓG. DIR.</small></div></div>` : '';
+  const sistema = `<div class="c-sistema">
+    ${extras.includes('dpadMini') ? `<div class="ss">${DPAD_HTML('mini')}D-PAD</div>` : ''}
+    ${b.sistema.map(([r, i]) => `<div class="ss"><button data-btn="${i}" aria-label="${esc(r)}"></button>${esc(r)}</div>`).join('')}</div>`;
+  $('#controles').innerHTML = `${ombros}<div class="c-meio">${esquerda}${direita}</div>${analogicos}
+    <div>${sistema}<div class="menu-row">
+      <button class="pilula" data-acao="salvar">💾 Salvar</button><button class="pilula" data-acao="carregar">📂 Carregar</button><button class="pilula" data-acao="menu">☰ Menu</button>
+    </div></div>`;
+  $$('#controles [data-btn]').forEach(ligarBotao);
+  $$('#controles .dpad').forEach(ligarDpad);
+  $$('#controles .joy').forEach(ligarJoy);
+}
 
 /* ================= MODO CELULAR (gestos) ================= */
 let preset = null;
 function montarGestos(c) {
   preset = info(c).gestos;
   const ex = $('#g-extras');
-  ex.innerHTML = (preset.extras || []).map(([r, i]) => `<button data-btn="${i}">${esc(r)}</button>`).join('') + '<button class="g-menu" data-acao="menu">☰</button>';
+  ex.innerHTML = (CONSOLES[c] ? extrasGestos(c) : []).map(([r, i]) => `<button data-btn="${i}">${esc(r)}</button>`).join('') + '<button class="g-menu" data-acao="menu">☰</button>';
   ex.querySelectorAll('[data-btn]').forEach(ligarBotao);
   const t = preset.toque ? preset.toque[1].split('·')[0].trim() : '';
   const s = preset.segurar ? preset.segurar[1].split('·')[0].trim() : '';

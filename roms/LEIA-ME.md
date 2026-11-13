@@ -33,3 +33,15 @@ que monta `lista.json` sozinho, e os jogos aparecem na seção **"No servidor"**
 
 Atenção: o site é público. Coloque aqui só jogos que você pode distribuir
 (homebrew, domínio público ou com licença para isso).
+
+## Como adicionar uma ROM sua para todos os aparelhos
+
+1. No GitHub, abra `roms/<console>/` (ex.: `roms/snes/`).
+2. **Add file → Upload files**, solte a ROM e clique em **Commit changes**.
+3. Em cerca de 1 minuto o Vercel publica de novo e o jogo aparece em todos os aparelhos,
+   na galeria do console, com o selo **SERVIDOR**.
+
+Limites do GitHub: pelo site, até **25 MB** por arquivo; por `git push`, até **100 MB**.
+ROMs maiores (alguns jogos de N64, PS1 e Saturn) precisam ir pelo terminal ou ser compactadas em .zip.
+
+Os saves de jogos do servidor ficam em cada aparelho (IndexedDB) e entram no backup .zip do app.

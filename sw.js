@@ -1,7 +1,7 @@
 // Service worker do PixelBoy: deixa o app e o emulador funcionando offline depois do primeiro uso.
-const VERSAO = 'pixelboy-v2';
+const VERSAO = 'pixelboy-v3';
 const BASE = [
-  './', './index.html', './app.js', './consoles.js', './manifest.webmanifest',
+  './', './index.html', './app.js', './consoles.js', './icones.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
 ];

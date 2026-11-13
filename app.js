@@ -164,10 +164,10 @@ function cartaoConsole(c, n) {
 function cartaoJogo(j, temSave) {
   const i = info(j.console);
   return `<div class="jogo" data-id="${esc(j.id)}">
-    ${j.servidor ? '' : '<button class="mais" data-mais aria-label="Opções">⋯</button>'}
+    ${j.servidor ? '' : `<button class="mais" data-mais aria-label="Opções">${ic('ellipsis')}</button>`}
     <button class="capa" style="--c:${i.cor}" data-jogar>
       <span class="selo">${temSave ? '<i>SAVE</i>' : ''}${j.servidor ? '<i>SERVIDOR</i>' : ''}</span>
-      <span class="ini">${esc(iniciais(j.nome))}</span><span class="play">▶</span>
+      <span class="ini">${esc(iniciais(j.nome))}</span><span class="play">${ic('play')}</span>
     </button>
     <div class="titulo">${esc(limparNome(j.nome))}</div>
   </div>`;
@@ -184,7 +184,7 @@ async function renderInicio() {
   const recentes = jogos.filter(j => saves.has(j.id)).slice(0, 4);
 
   let h = '';
-  if (!jogos.length) h += `<div class="vazio-box"><b>Sua biblioteca está vazia.</b><br>Toque em <b>＋ Adicionar</b> e escolha ROMs ou um pack .zip — o app separa cada jogo no console certo e guarda tudo neste aparelho.</div>`;
+  if (!jogos.length) h += `<div class="vazio-box"><b>Sua biblioteca está vazia.</b><br>Toque em <b>Adicionar</b> e escolha ROMs ou um pack .zip — o app separa cada jogo no console certo e guarda tudo neste aparelho.</div>`;
   if (recentes.length) h += `<div class="secao"><h2>Continuar jogando</h2></div><div class="grade">${recentes.map(j => cartaoJogo(j, true)).join('')}</div>`;
   if (comJogos.length) h += `<div class="secao"><h2>Seus consoles</h2><span>${jogos.length} jogos</span></div><div class="grade">${comJogos.map(c => cartaoConsole(c, cont[c])).join('')}</div>`;
   h += `<div class="secao"><h2>${comJogos.length ? 'Outros consoles' : 'Consoles'}</h2><span>${semJogos.length}</span></div><div class="grade">${semJogos.map(c => cartaoConsole(c, 0)).join('')}</div>`;
@@ -198,9 +198,9 @@ async function renderConsole(c) {
   const { jogos, saves } = await meta();
   const meus = jogos.filter(j => j.console === c).sort((a, b) => a.nome.localeCompare(b.nome));
   let h = '';
-  if (!meus.length) h += `<div class="vazio-box">Nenhum jogo de <b>${esc(i.nome)}</b> ainda.<br>Toque em <b>＋ Adicionar</b> para escolher ROMs ou um pack .zip.<br><br><small>Extensões: ${i.ext.length ? i.ext.map(e => '.' + e).join(' ') : '.zip / .chd / .cue (você escolhe o console ao adicionar)'}</small></div>`;
+  if (!meus.length) h += `<div class="vazio-box">Nenhum jogo de <b>${esc(i.nome)}</b> ainda.<br>Toque em <b>Adicionar</b> para escolher ROMs ou um pack .zip.<br><br><small>Extensões: ${i.ext.length ? i.ext.map(e => '.' + e).join(' ') : '.zip / .chd / .cue (você escolhe o console ao adicionar)'}</small></div>`;
   else h += `<div class="secao"><h2>Jogos</h2><span>${meus.length}</span></div><div class="grade">${meus.map(j => cartaoJogo(j, saves.has(j.id))).join('')}</div>`;
-  h += `<button class="pilula" style="width:100%;background:#2e2a40;box-shadow:none;padding:13px" data-ver-gestos="${c}">🖐 Ver gestos do modo celular</button>`;
+  h += `<button class="pilula" style="width:100%;background:#2e2a40;box-shadow:none;padding:13px" data-ver-gestos="${c}">${ic('hand')} Ver gestos do modo celular</button>`;
   $('#conteudo').innerHTML = h;
 }
 
@@ -227,10 +227,10 @@ async function opcoesJogo(id) {
   const s = await DB.get('saves', id);
   $('#jogo-corpo').innerHTML = `<h4>${esc(limparNome(j.nome))}</h4>
     <p>${esc(info(j.console).nome)} · ${(j.tamanho / 1048576).toFixed(1)} MB${s ? ' · tem save' : ''}</p>
-    <button class="pilula destaque" data-o="jogar">▶ Jogar</button>
-    <button class="pilula" data-o="console">🎮 Mudar console</button>
-    ${s ? '<button class="pilula" data-o="limpar">🧹 Apagar só o save</button>' : ''}
-    <button class="pilula" data-o="apagar" style="color:#ff8a8a">🗑 Apagar jogo e save</button>
+    <button class="pilula destaque" data-o="jogar">${ic('play')} Jogar</button>
+    <button class="pilula" data-o="console">${ic('gamepad-2')} Mudar console</button>
+    ${s ? `<button class="pilula" data-o="limpar">${ic('eraser')} Apagar só o save</button>` : ''}
+    <button class="pilula" data-o="apagar" style="color:#ff8a8a">${ic('trash-2')} Apagar jogo e save</button>
     <button class="pilula" data-o="fechar">Fechar</button>`;
   abrir('#f-jogo');
   $('#jogo-corpo').onclick = async e => {
@@ -409,7 +409,7 @@ function renderConfig() {
     <h5>Gestos de cada console</h5>
     <div class="lista-consoles">${Object.keys(CONSOLES).map(c => `<button data-g="${c}">${CONSOLES[c].nome}</button>`).join('')}</div>
     <h5>Biblioteca e saves</h5>
-    <div class="duas"><button class="pilula" data-exp>⬇ Exportar zip</button><button class="pilula" data-imp>⬆ Importar zip</button></div>
+    <div class="duas"><button class="pilula" data-exp>${ic('download')} Exportar zip</button><button class="pilula" data-imp>${ic('upload')} Importar zip</button></div>
     <p>O backup leva todos os jogos e saves deste aparelho. "Importar" aceita um backup ou um pack com várias ROMs.</p>
     <button class="pilula destaque" data-fechar>Pronto</button>`;
 }
@@ -426,7 +426,7 @@ $('#config-corpo').addEventListener('click', e => {
 });
 
 /* Legenda dos gestos */
-const SETAS = { cima: '↑', baixo: '↓', esq: '←', dir: '→' };
+const SETAS = { cima: ic('arrow-up'), baixo: ic('arrow-down'), esq: ic('arrow-left'), dir: ic('arrow-right') };
 function legenda(c) {
   const g = info(c).gestos;
   const movTxt = { dpad: 'direcional (8 direções)', analog: 'analógico (quanto mais longe, mais rápido)', ambos: 'analógico + direcional' }[g.mov];
@@ -436,7 +436,7 @@ function legenda(c) {
   for (const [d, v] of Object.entries(g.deslizes || {})) l += `<div><b>Deslize ${SETAS[d]}</b>${esc(v[1])}</div>`;
   if (g.camera) l += `<div><b>Arraste à direita</b>Câmera / botões C (arraste devagar e mantenha)</div>`;
   const ex = CONSOLES[c] ? extrasGestos(c) : [];
-  if (ex.length) l += `<div><b>Botões</b>${ex.map(x => esc(x[0])).join(' · ')} (na barra de cima)</div>`;
+  if (ex.length) l += `<div><b>Botões</b>${ex.map(x => rotulo(x[0])).join(' · ')} (na barra de cima)</div>`;
   l += `<div><b>Dica</b>Use dois dedos à direita para combinar ações (ex.: segurar para correr e tocar para pular).</div>`;
   return l;
 }
@@ -526,7 +526,7 @@ async function salvarEstado() {
     const s = (await DB.get('saves', atual.id)) || { id: atual.id };
     s.state = new Uint8Array(st); s.atualizado = Date.now();
     await DB.put('saves', s); await salvarSRAM();
-    aviso('Estado salvo 💾', 2200, 'salvar'); vib(25);
+    aviso('Estado salvo', 2200, 'salvar'); vib(25);
   } catch (e) { aviso('Não foi possível salvar'); }
 }
 async function carregarEstado() {
@@ -551,11 +551,11 @@ function telaCheia() {
 function abrirMenu() {
   const gestos = document.body.classList.contains('modo-gestos');
   $('#menu-corpo').innerHTML = `<h4>${esc(limparNome(atual.nome))}</h4>
-    <div class="duas"><button class="pilula" data-m="salvar">💾 Salvar estado</button><button class="pilula" data-m="carregar">📂 Carregar estado</button></div>
-    <button class="pilula" data-m="modo">🎮 Trocar para ${gestos ? 'botões clássicos' : 'modo celular (gestos)'}</button>
-    ${gestos ? '<button class="pilula" data-m="gestos">🖐 Ver gestos</button>' : ''}
-    <div class="duas"><button class="pilula" data-m="pausar">${pausado ? '▶ Continuar' : '⏸ Pausar'}</button><button class="pilula" data-m="reiniciar">↺ Reiniciar</button></div>
-    <button class="pilula destaque" data-m="sair">◀ Voltar à galeria</button>
+    <div class="duas"><button class="pilula" data-m="salvar">${ic('save')} Salvar estado</button><button class="pilula" data-m="carregar">${ic('folder-open')} Carregar estado</button></div>
+    <button class="pilula" data-m="modo">${ic('gamepad-2')} Trocar para ${gestos ? 'botões clássicos' : 'modo celular (gestos)'}</button>
+    ${gestos ? `<button class="pilula" data-m="gestos">${ic('hand')} Ver gestos</button>` : ''}
+    <div class="duas"><button class="pilula" data-m="pausar">${pausado ? ic('play') + ' Continuar' : ic('pause') + ' Pausar'}</button><button class="pilula" data-m="reiniciar">${ic('rotate-ccw')} Reiniciar</button></div>
+    <button class="pilula destaque" data-m="sair">${ic('arrow-left')} Voltar à galeria</button>
     <button class="pilula" data-m="fechar">Fechar</button>`;
   abrir('#f-menu');
 }
@@ -650,7 +650,8 @@ function ligarJoy(el) {
 
 const DPAD_HTML = cls => `<div class="dpad ${cls || ''}" data-dir=""><div class="h"></div><div class="v"></div><div class="centro"></div>
   <i class="seta s4"></i><i class="seta s5"></i><i class="seta s6"></i><i class="seta s7"></i></div>`;
-const botaoFace = ([r, i], k) => `<button class="bt n${k}" data-btn="${i}"><span>${esc(r)}</span></button>`;
+const rotulo = r => r.startsWith('ic:') ? ic(r.slice(3)) : esc(r);
+const botaoFace = ([r, i], k) => `<button class="bt n${k}" data-btn="${i}" aria-label="${esc(r.replace('ic:', ''))}"><span>${rotulo(r)}</span></button>`;
 
 /* Monta o controle clássico com TODOS os botões do console (ver consoles.js) */
 function montarClassico(c) {
@@ -663,8 +664,8 @@ function montarClassico(c) {
   let direita;
   if (extras.includes('cbotoes')) {
     direita = `<div class="face fn64">
-      <button class="c cu" data-btn="23" data-analog="1">▲</button><button class="c cl" data-btn="21" data-analog="1">◀</button>
-      <button class="c cr" data-btn="20" data-analog="1">▶</button><button class="c cd" data-btn="22" data-analog="1">▼</button>
+      <button class="c cu" data-btn="23" data-analog="1">${ic('chevron-up')}</button><button class="c cl" data-btn="21" data-analog="1">${ic('chevron-left')}</button>
+      <button class="c cr" data-btn="20" data-analog="1">${ic('chevron-right')}</button><button class="c cd" data-btn="22" data-analog="1">${ic('chevron-down')}</button>
       ${b.face.map(botaoFace).join('')}</div>`;
   } else {
     direita = `<div class="face f${b.face.length}">${b.face.map(botaoFace).join('')}</div>`;
@@ -676,7 +677,7 @@ function montarClassico(c) {
     ${b.sistema.map(([r, i]) => `<div class="ss"><button data-btn="${i}" aria-label="${esc(r)}"></button>${esc(r)}</div>`).join('')}</div>`;
   $('#controles').innerHTML = `${ombros}<div class="c-meio">${esquerda}${direita}</div>${analogicos}
     <div>${sistema}<div class="menu-row">
-      <button class="pilula" data-acao="salvar">💾 Salvar</button><button class="pilula" data-acao="carregar">📂 Carregar</button><button class="pilula" data-acao="menu">☰ Menu</button>
+      <button class="pilula" data-acao="salvar">${ic('save')} Salvar</button><button class="pilula" data-acao="carregar">${ic('folder-open')} Carregar</button><button class="pilula" data-acao="menu">${ic('menu')} Menu</button>
     </div></div>`;
   $$('#controles [data-btn]').forEach(ligarBotao);
   $$('#controles .dpad').forEach(ligarDpad);
@@ -688,7 +689,7 @@ let preset = null;
 function montarGestos(c) {
   preset = info(c).gestos;
   const ex = $('#g-extras');
-  ex.innerHTML = (CONSOLES[c] ? extrasGestos(c) : []).map(([r, i]) => `<button data-btn="${i}">${esc(r)}</button>`).join('') + '<button class="g-menu" data-acao="menu">☰</button>';
+  ex.innerHTML = (CONSOLES[c] ? extrasGestos(c) : []).map(([r, i]) => `<button data-btn="${i}">${rotulo(r)}</button>`).join('') + `<button class="g-menu" data-acao="menu" aria-label="Menu">${ic('menu')}</button>`;
   ex.querySelectorAll('[data-btn]').forEach(ligarBotao);
   const t = preset.toque ? preset.toque[1].split('·')[0].trim() : '';
   const s = preset.segurar ? preset.segurar[1].split('·')[0].trim() : '';
@@ -800,6 +801,7 @@ function montarGestos(c) {
 
 /* ================= Início ================= */
 (async () => {
+  hidratarIcones();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   await carregarServidor();
   const pendente = sessionStorage.getItem('pb-abrir');

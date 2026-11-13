@@ -26,7 +26,7 @@
      Master System / GG ..... botão 1=B(0) · botão 2=A(8)
      Mega Drive/32X/CD ...... A=Y(1) · B=B(0) · C=A(8) · X=L(10) · Y=X(9) · Z=R(11) · MODE=SELECT
      Saturn yabause ......... A=B(0) · B=A(8) · C=R2(13) · X=Y(1) · Y=X(9) · Z=L2(12)
-     PlayStation pcsx ....... ✕=B(0) · ◯=A(8) · □=Y(1) · △=X(9) · L1 R1 L2 R2 L3 R3
+     PlayStation pcsx ....... Cruz=B(0) · Círculo=A(8) · Quadrado=Y(1) · Triângulo=X(9) · L1 R1 L2 R2 L3 R3
      PC Engine .............. I=A(8) · II=B(0) · RUN=START
      PC-FX .................. I=A · II=B · III=Y · IV=X · V=L · VI=R
      Neo Geo Pocket ......... A=B(0) · B=A(8) · OPTION=START
@@ -63,8 +63,8 @@ const G = {
            deslizes: { cima: [8, 'Pulo alto', 380], esq: [0, 'Botão 1'], dir: [0, 'Botão 1'] } },
   n64:   { mov: 'analog', toque: [0, 'A · pular'], segurar: [12, 'Z · agachar / mirar'], camera: true,
            deslizes: { esq: [1, 'B · atacar'], dir: [1, 'B · atacar'], baixo: [12, 'Z'], cima: [0, 'Pulo alto (A longo)', 380] } },
-  psx:   { mov: 'ambos', toque: [0, '✕ · pular / confirmar'], segurar: [1, '□ · atacar / correr'], camera: true,
-           deslizes: { dir: [8, '◯ · voltar / ação'], cima: [9, '△ · menu / especial'], esq: [1, '□ · ataque'] } },
+  psx:   { mov: 'ambos', toque: [0, 'Cruz · pular / confirmar'], segurar: [1, 'Quadrado · atacar / correr'], camera: true,
+           deslizes: { dir: [8, 'Círculo · voltar / ação'], cima: [9, 'Triângulo · menu / especial'], esq: [1, 'Quadrado · ataque'] } },
   nds:   { mov: 'dpad', toque: [8, 'A · ação'], segurar: [0, 'B · correr / voltar'], tela: false,
            deslizes: { esq: [0, 'B'], cima: [9, 'X · menu'], baixo: [1, 'Y'] } },
   saturn:{ mov: 'dpad', toque: [0, 'A · pular / ação'], segurar: [8, 'B · ataque'],
@@ -101,7 +101,7 @@ const CONSOLES = {
   segaSaturn: { nome: 'Sega Saturn', sigla: 'SAT', cor: '#3d3d3d', ext: [],
                 botoes: { mov: 'dpad', face: [['X', 1], ['Y', 9], ['Z', 12], ['A', 0], ['B', 8], ['C', 13]], ombros: S.lr, sistema: S.st }, gestos: G.saturn },
   psx:        { nome: 'PlayStation', sigla: 'PS1', cor: '#7f8c8d', ext: ['pbp'], auto3d: true,
-                botoes: { mov: 'dpad', face: [['△', 9], ['□', 1], ['◯', 8], ['✕', 0]], ombros: [['L1', 10], ['L2', 12], ['R2', 13], ['R1', 11]],
+                botoes: { mov: 'dpad', face: [['ic:triangle', 9], ['ic:square', 1], ['ic:circle', 8], ['ic:x', 0]], ombros: [['L1', 10], ['L2', 12], ['R2', 13], ['R1', 11]],
                           sistema: [['SELECT', 2], ['START', 3], ['L3', 14], ['R3', 15]], extras: ['analogicos'] }, gestos: G.psx },
   pce:        { nome: 'PC Engine', sigla: 'PCE', cor: '#d35400', ext: ['pce','sgx'],
                 botoes: { mov: 'dpad', face: [['II', 0], ['I', 8]], ombros: [], sistema: [['SELECT', 2], ['RUN', 3]] },

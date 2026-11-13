@@ -30,6 +30,11 @@
     -webkit-tap-highlight-color:transparent;overscroll-behavior:none}
   button{font:inherit;color:inherit;border:none;background:none;cursor:pointer;padding:0}
   input[type=file]{display:none}
+  .ic{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em}
+  .icone .ic{width:20px;height:20px}
+  .bt .ic{width:46%;height:46%;stroke-width:2.6}
+  .capa .play .ic{width:16px;height:16px;fill:currentColor}
+  .legenda b .ic{width:14px;height:14px;margin-left:2px}
 
   /* ======================= GALERIA (mobile first) ======================= */
   #app{min-height:100%;padding:0 0 calc(var(--base) + 96px)}
@@ -281,17 +286,17 @@
 <!-- ======================= GALERIA ======================= -->
 <div id="app">
   <header class="barra">
-    <button class="icone" id="voltar" style="display:none" aria-label="Voltar">←</button>
+    <button class="icone" id="voltar" style="display:none" aria-label="Voltar"><i data-ic="arrow-left"></i></button>
     <h1 id="titulo">PixelBoy<small>WEB</small></h1>
-    <button class="icone" id="abrir-config" aria-label="Configurações">⚙</button>
+    <button class="icone" id="abrir-config" aria-label="Configurações"><i data-ic="settings"></i></button>
   </header>
   <main class="conteudo" id="conteudo"></main>
-  <button class="fab" id="b-add">＋ Adicionar</button>
+  <button class="fab" id="b-add"><i data-ic="plus"></i> Adicionar</button>
 </div>
 
 <!-- ======================= PLAYER ======================= -->
 <div id="shell">
-  <div id="topo"><span>◀ OFF · ON ▶</span><span class="linha"></span></div>
+  <div id="topo"><span>OFF · ON</span><span class="linha"></span></div>
   <div id="bezel">
     <div class="rotulo"><i></i><span id="rotulo-console">PIXELBOY</span><i></i></div>
     <span id="led"></span>
@@ -310,9 +315,9 @@
       <div class="zona" id="z-acao"><div class="dica" id="dica-acao"></div></div>
     </div>
     <div class="menu-row" id="g-menu-row">
-      <button class="pilula" data-acao="salvar">💾 Salvar</button>
-      <button class="pilula" data-acao="carregar">📂 Carregar</button>
-      <button class="pilula" data-acao="menu">☰ Menu</button>
+      <button class="pilula" data-acao="salvar"><i data-ic="save"></i> Salvar</button>
+      <button class="pilula" data-acao="carregar"><i data-ic="folder-open"></i> Carregar</button>
+      <button class="pilula" data-acao="menu"><i data-ic="menu"></i> Menu</button>
     </div>
   </div>
 </div>
@@ -335,6 +340,7 @@
 <input type="file" id="in-zip">
 <div id="aviso"></div>
 
+<script src="icones.js"></script>
 <script src="consoles.js"></script>
 <script src="app.js"></script>
 </body>

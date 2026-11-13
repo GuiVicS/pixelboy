@@ -20,3 +20,15 @@ roms/                 jogos servidos pelo site (ver roms/LEIA-ME.md)
 ```
 
 Site estático: não precisa de build. Publicado no Vercel.
+
+## Modo celular (gestos)
+
+Em **⚙ Configurações** escolha *Automático*, *Modo celular (gestos)* ou *Botões clássicos*.
+No modo celular o lado esquerdo vira um analógico/direcional flutuante e o lado direito
+reconhece **toque**, **segurar**, **deslizar** (↑ ↓ ← →) e, nos consoles 3D, **arrastar = câmera**.
+O mapeamento de cada console, com o raciocínio por tipo de jogo, está em `consoles.js`.
+
+## Adicionar jogos
+
+O botão **＋ Adicionar** aceita várias ROMs de uma vez, um `.zip` com uma ROM, um **pack .zip**
+com várias ROMs (cada uma vai para o console certo) ou um backup exportado pelo próprio app.

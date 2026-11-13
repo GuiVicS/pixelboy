@@ -13,14 +13,81 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const limparNome = n => semExt(n).replace(/[\(\[].*?[\)\]]/g, '').replace(/[_.]+/g, ' ').replace(/\s+/g, ' ').trim() || semExt(n);
 const iniciais = n => limparNome(n).split(' ').filter(p => /[a-z0-9]/i.test(p)).slice(0, 2).map(p => p[0]).join('').toUpperCase() || '?';
 
+/* ================= Som sempre funcionando =================
+   Navegadores (principalmente no celular) criam o áudio "suspenso" até o primeiro toque,
+   e o suspendem de novo quando o app vai para o fundo. Aqui registramos todo AudioContext
+   criado (inclusive o do EmulatorJS) e religamos todos a cada toque e ao voltar para o app. */
+const contextosAudio = new Set();
+(() => {
+  const Orig = window.AudioContext || window.webkitAudioContext;
+  if (!Orig) return;
+  function Rastreado(...args) { const c = new Orig(...args); contextosAudio.add(c); return c; }
+  Rastreado.prototype = Orig.prototype;
+  Object.setPrototypeOf(Rastreado, Orig);
+  window.AudioContext = Rastreado;
+  if (window.webkitAudioContext) window.webkitAudioContext = Rastreado;
+  // iOS: toca mesmo com a chave de silencioso ligada
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+})();
+function destravarAudio() {
+  for (const c of contextosAudio) if (c.state !== 'running' && c.state !== 'closed') c.resume().catch(() => {});
+}
+['pointerdown', 'touchend', 'keydown', 'click'].forEach(ev => document.addEventListener(ev, destravarAudio, { capture: true, passive: true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { destravarAudio(); setTimeout(destravarAudio, 300); } });
+window.addEventListener('focus', destravarAudio);
+window.addEventListener('pageshow', destravarAudio);
+
 /* ================= Configurações ================= */
-const CFG_PADRAO = { modo: 'auto', vibrar: true, legendaVista: {} };
+const CFG_PADRAO = { modo: 'auto', vibrar: true, sons: true, legendaVista: {} };
 let cfg = { ...CFG_PADRAO };
 try { cfg = { ...CFG_PADRAO, ...JSON.parse(localStorage.getItem('pb-config') || '{}') }; } catch (e) {}
 const salvarCfg = () => { try { localStorage.setItem('pb-config', JSON.stringify(cfg)); } catch (e) {} };
 const vib = (ms = 8) => { if (cfg.vibrar) try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
 
-function aviso(txt, ms = 2200) {
+/* ================= Efeitos sonoros (sintetizados, estilo 8 bits) ================= */
+const SFX = (() => {
+  let ctx = null, mestre = null;
+  const pegar = () => {
+    if (!ctx) { ctx = new AudioContext(); mestre = ctx.createGain(); mestre.gain.value = 0.5; mestre.connect(ctx.destination); }
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
+    return ctx;
+  };
+  function tom(f, dur, tipo = 'square', vol = 0.12, atraso = 0, fFinal = null) {
+    const c = pegar(), t = c.currentTime + atraso;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = tipo; o.frequency.setValueAtTime(f, t);
+    if (fFinal) o.frequency.exponentialRampToValueAtTime(fFinal, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(mestre); o.start(t); o.stop(t + dur + 0.02);
+  }
+  const sons = {
+    toque:   () => tom(1046, 0.04, 'square', 0.08),
+    nav:     () => { tom(660, 0.05); tom(990, 0.07, 'square', 0.1, 0.05); },
+    abrir:   () => { tom(523, 0.05, 'triangle', 0.16); tom(784, 0.08, 'triangle', 0.16, 0.05); },
+    fechar:  () => { tom(784, 0.05, 'triangle', 0.16); tom(523, 0.08, 'triangle', 0.16, 0.05); },
+    ok:      () => [523, 659, 784, 1047].forEach((f, i) => tom(f, 0.09, 'square', 0.09, i * 0.07)),
+    salvar:  () => { tom(880, 0.06, 'square', 0.09); tom(1318, 0.12, 'square', 0.09, 0.07); },
+    carregar:() => { tom(1318, 0.06, 'square', 0.09); tom(880, 0.12, 'square', 0.09, 0.07); },
+    erro:    () => { tom(220, 0.12, 'sawtooth', 0.07); tom(147, 0.2, 'sawtooth', 0.07, 0.11); },
+    apagar:  () => tom(500, 0.25, 'triangle', 0.14, 0, 90),
+    iniciar: () => [392, 523, 659, 784, 1047, 784, 1047].forEach((f, i) => tom(f, i === 6 ? 0.25 : 0.08, 'square', 0.08, i * 0.075)),
+  };
+  return { tocar(n) { if (!cfg.sons || !sons[n]) return; try { sons[n](); } catch (e) {} } };
+})();
+
+// sons automáticos nos botões da interface (os controles do jogo ficam só com vibração)
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.closest('#controles, #gestos')) return;
+  if (b.matches('.console')) SFX.tocar('nav');
+  else if (b.matches('[data-jogar]')) SFX.tocar('iniciar');
+  else if (b.matches('#voltar, [data-fechar], [data-m="fechar"], [data-o="fechar"], [data-c=""]')) SFX.tocar('fechar');
+  else if (b.matches('[data-mais], #abrir-config, #b-add, [data-g], [data-ver-gestos]')) SFX.tocar('abrir');
+  else SFX.tocar('toque');
+}, true);
+
+function aviso(txt, ms = 2200, som = null) {
+  if (som) SFX.tocar(som);
   const a = $('#aviso'); a.textContent = txt; a.classList.add('mostrar');
   clearTimeout(aviso.t); aviso.t = setTimeout(() => a.classList.remove('mostrar'), ms);
 }
@@ -172,7 +239,7 @@ async function opcoesJogo(id) {
     if (o === 'jogar') jogar(j, true);
     if (o === 'console') { const c = await perguntarConsole(j.arquivo); if (c) { j.console = c; await DB.put('jogos', j); rota(); } }
     if (o === 'limpar' && confirm('Apagar o save deste jogo?')) { await DB.del('saves', id); rota(); aviso('Save apagado'); }
-    if (o === 'apagar' && confirm(`Apagar "${limparNome(j.nome)}" e o save dele?`)) { await DB.del('jogos', id); await DB.del('saves', id); rota(); aviso('Jogo apagado'); }
+    if (o === 'apagar' && confirm(`Apagar "${limparNome(j.nome)}" e o save dele?`)) { await DB.del('jogos', id); await DB.del('saves', id); rota(); aviso('Jogo apagado', 2200, 'apagar'); }
   };
 }
 
@@ -222,14 +289,14 @@ async function abrirZip(file, padrao) {
       if (!c) continue;
       await guardarRom(f.name.split('/').pop(), await f.async('arraybuffer'), c); n++; c0 = c;
     }
-    aviso(`Pack importado: ${n} jogos`);
+    aviso(`Pack importado: ${n} jogos`, 2200, 'ok');
     return c0;
   }
   // uma ROM só dentro do zip: guarda o zip inteiro (o EmulatorJS descompacta sozinho)
   const c = (roms[0] && consolePorExt(roms[0].name)) || padrao || await perguntarConsole(file.name);
   if (!c) return null;
   await guardarRom(file.name, await file.arrayBuffer(), c);
-  aviso('Adicionado: ' + limparNome(file.name));
+  aviso('Adicionado: ' + limparNome(file.name), 2200, 'ok');
   return c;
 }
 
@@ -265,10 +332,10 @@ $('#in-jogo').onchange = async e => {
   let ultimo = null, n = 0;
   for (const f of files) {
     try { const c = await adicionarArquivo(f, padrao); if (c) { ultimo = c; n++; } }
-    catch (err) { aviso('Erro ao adicionar ' + f.name); }
+    catch (err) { aviso('Erro ao adicionar ' + f.name, 2200, 'erro'); }
   }
-  if (n > 1) aviso(`${n} arquivos adicionados`);
-  else if (n === 1 && files.length === 1 && ext(files[0].name) !== 'zip') aviso('Adicionado: ' + limparNome(files[0].name));
+  if (n > 1) aviso(`${n} arquivos adicionados`, 2200, 'ok');
+  else if (n === 1 && files.length === 1 && ext(files[0].name) !== 'zip') aviso('Adicionado: ' + limparNome(files[0].name), 2200, 'ok');
   if (!padrao && ultimo && n === 1) location.hash = 'console-' + ultimo; else rota();
 };
 
@@ -296,7 +363,7 @@ async function exportar() {
   a.download = `pixelboy-backup-${new Date().toISOString().slice(0, 10)}.zip`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 20000);
-  aviso(`Backup: ${m.jogos.length} jogos, ${m.saves.length} saves`);
+  aviso(`Backup: ${m.jogos.length} jogos, ${m.saves.length} saves`, 2200, 'ok');
 }
 
 async function importarBackup(z) {
@@ -314,14 +381,14 @@ async function importarBackup(z) {
     if (s.state && z.file(s.state)) o.state = await z.file(s.state).async('uint8array');
     await DB.put('saves', o); ns++;
   }
-  aviso(`Backup restaurado: ${nj} jogos, ${ns} saves`);
+  aviso(`Backup restaurado: ${nj} jogos, ${ns} saves`, 2200, 'ok');
   return null;
 }
 
 $('#in-zip').onchange = async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
-  try { await abrirZip(f, consoleAtual()); } catch (err) { aviso('Esse arquivo não é um zip válido'); }
+  try { await abrirZip(f, consoleAtual()); } catch (err) { aviso('Esse arquivo não é um zip válido', 2200, 'erro'); }
   rota();
 };
 
@@ -336,6 +403,9 @@ function renderConfig() {
     <h5>Controles no celular</h5>
     <div class="opcoes">${MODOS.map(([v, t, d]) => `<button class="opcao ${cfg.modo === v ? 'sel' : ''}" data-modo="${v}"><span class="bola"></span><div><b>${t}</b><span>${d}</span></div></button>`).join('')}</div>
     <button class="linha-cfg" data-vibrar>Vibrar ao tocar <span class="chave ${cfg.vibrar ? 'on' : ''}"></span></button>
+    <h5>Som</h5>
+    <button class="linha-cfg" data-sons>Efeitos sonoros do app <span class="chave ${cfg.sons ? 'on' : ''}"></span></button>
+    <p>O som do jogo fica sempre ligado: o app religa o áudio a cada toque e quando você volta para ele.</p>
     <h5>Gestos de cada console</h5>
     <div class="lista-consoles">${Object.keys(CONSOLES).map(c => `<button data-g="${c}">${CONSOLES[c].nome}</button>`).join('')}</div>
     <h5>Biblioteca e saves</h5>
@@ -347,6 +417,7 @@ $('#abrir-config').onclick = () => { renderConfig(); abrir('#f-config'); };
 $('#config-corpo').addEventListener('click', e => {
   const m = e.target.closest('[data-modo]');
   if (m) { cfg.modo = m.dataset.modo; salvarCfg(); renderConfig(); aplicarModo(); return; }
+  if (e.target.closest('[data-sons]')) { cfg.sons = !cfg.sons; salvarCfg(); renderConfig(); SFX.tocar('ok'); return; }
   if (e.target.closest('[data-vibrar]')) { cfg.vibrar = !cfg.vibrar; salvarCfg(); renderConfig(); vib(30); return; }
   const g = e.target.closest('[data-g]'); if (g) { mostrarGestos(g.dataset.g); return; }
   if (e.target.closest('[data-exp]')) { exportar().catch(() => aviso('Erro ao exportar')); return; }
@@ -412,6 +483,7 @@ function jogar(jogo, peloToque) {
     EJS_pathtodata: CDN,
     EJS_startOnLoaded: !!peloToque,
     EJS_color: '#a3195b',
+    EJS_volume: 1,
     EJS_onGameStart: aoIniciar,
   });
   const s = document.createElement('script');
@@ -427,6 +499,7 @@ async function aoIniciar() {
     if (s && s.srm) { g.FS.writeFile(g.getSaveFilePath(), s.srm); g.loadSaveFiles(); }
   } catch (e) { console.warn('save', e); }
   setInterval(salvarSRAM, 20000);
+  destravarAudio(); setTimeout(destravarAudio, 500);
   if (document.body.classList.contains('modo-gestos') && !cfg.legendaVista[atual.console]) {
     cfg.legendaVista[atual.console] = true; salvarCfg(); mostrarGestos(atual.console);
   }
@@ -451,14 +524,14 @@ async function salvarEstado() {
     const s = (await DB.get('saves', atual.id)) || { id: atual.id };
     s.state = new Uint8Array(st); s.atualizado = Date.now();
     await DB.put('saves', s); await salvarSRAM();
-    aviso('Estado salvo 💾'); vib(25);
+    aviso('Estado salvo 💾', 2200, 'salvar'); vib(25);
   } catch (e) { aviso('Não foi possível salvar'); }
 }
 async function carregarEstado() {
   const g = gm(); if (!g) return aviso('O jogo ainda não começou');
   const s = await DB.get('saves', atual.id);
-  if (!s || !s.state) return aviso('Nenhum estado salvo ainda');
-  try { g.loadState(s.state); aviso('Estado carregado'); } catch (e) { aviso('Erro ao carregar'); }
+  if (!s || !s.state) return aviso('Nenhum estado salvo ainda', 2200, 'erro');
+  try { g.loadState(s.state); aviso('Estado carregado', 2200, 'carregar'); } catch (e) { aviso('Erro ao carregar', 2200, 'erro'); }
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) salvarSRAM(); });
 window.addEventListener('pagehide', salvarSRAM);
